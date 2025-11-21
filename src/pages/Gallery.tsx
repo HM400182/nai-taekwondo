@@ -156,7 +156,7 @@ export default function Gallery() {
 
       {/* Lightbox */}
       <PhotoLightbox
-        images={filteredMedia}
+        media={filteredMedia}
         currentIndex={currentMediaIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}

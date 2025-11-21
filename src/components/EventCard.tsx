@@ -9,23 +9,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Clock } from "lucide-react";
 
-interface EventCardProps {
+interface Event {
+  id: string;
   title: string;
   date: string;
   time: string;
   location: string;
   description: string;
-  category?: string;
+  category: string;
 }
 
-export const EventCard = ({
-  title,
-  date,
-  time,
-  location,
-  description,
-  category,
-}: EventCardProps) => {
+interface EventCardProps {
+  event: Event;
+}
+
+export const EventCard = ({ event }: EventCardProps) => {
+  const { title, date, time, location, description, category } = event;
+
   return (
     <motion.div
       whileHover={{ y: -5, scale: 1.02 }}
