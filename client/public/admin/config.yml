@@ -1,0 +1,28 @@
+backend:
+  name: git-gateway
+  branch: main
+
+media_folder: "public/uploads"    # Where uploaded images are stored
+public_folder: "/uploads"         # How images are accessed publicly
+
+collections:
+  - name: "site_data"
+    label: "Site Data"
+    files:
+      - file: "public/content/data.json"
+        label: "Site Content"
+        name: "data"
+        format: json
+        fields:
+          - label: "Home"
+            name: "home"
+            widget: object
+            fields:
+              - { label: "Title", name: "title", widget: "string" }
+              - { label: "Hero image", name: "hero_image", widget: "image" }
+              - { label: "Next event date", name: "next_event_date", widget: "datetime" }
+
+          - label: "Gallery"
+            name: "gallery"
+            widget: list
+            field: { label: "Image", name: "image", widget: "image" }
