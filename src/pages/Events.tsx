@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { Layout } from "@/components/Layout";
 import { EventCard } from "@/components/EventCard";
 import { AnnouncementCard } from "@/components/AnnouncementCard";
@@ -11,180 +9,174 @@ import { Link } from "react-router-dom";
 import { Calendar, Megaphone, Trophy } from "lucide-react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface EventData {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  location: string;
-  description: string;
-  category: string;
-}
-
-interface Announcement {
-  id: string;
-  title: string;
-  description: string;
-  date: string;
-  category?: "Update" | "Promotion" | "Schedule" | "General";
-}
+// Using mock data instead of Firebase
+import { mockEvents, mockAnnouncements, type Event, type Announcement } from "@/lib/mockData";
 
 const EventsPage = () => {
-  const [upcomingEvents, setUpcomingEvents] = useState<EventData[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Simulate async data loading with mock data
     setLoading(true);
-
-    // Real-time listener for events
-    const eventsQuery = query(collection(db, "events"), orderBy("date", "asc"));
-    const unsubscribeEvents = onSnapshot(eventsQuery, (snapshot) => {
-      const eventsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as EventData[];
-      setUpcomingEvents(eventsData);
+    
+    setTimeout(() => {
+      setUpcomingEvents(mockEvents);
+      setAnnouncements(mockAnnouncements);
       setLoading(false);
-    });
-
-    // Real-time listener for announcements
-    const announcementsQuery = query(collection(db, "announcements"), orderBy("date", "desc"));
-    const unsubscribeAnnouncements = onSnapshot(announcementsQuery, (snapshot) => {
-      const announcementsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Announcement[];
-      setAnnouncements(announcementsData);
-    });
-
-    return () => {
-      unsubscribeEvents();
-      unsubscribeAnnouncements();
-    };
+    }, 500);
   }, []);
 
   return (
     <Layout>
-      {/* hero — keep your existing hero markup */}
+      {/* Hero Section */}
       <section className="relative py-20 md:py-32 hero-gradient overflow-hidden">
         <div className="container mx-auto px-4 relative z-10 text-center text-white">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
             <Calendar className="w-4 h-4" />
             <span className="text-sm font-medium">Stay Updated</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Events & Announcements</h1>
-          <p className="text-xl md:text-2xl text-white/90 mb-8">Stay updated with the latest Taekwondo news, events, and updates.</p>
-          <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-            <Link to="/join">Join Our Next Event</Link>
-          </Button>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl md:text-6xl font-bold mb-6"
+          >
+            Events & Announcements
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-xl md:text-2xl mb-8 text-white/90 max-w-3xl mx-auto"
+          >
+            Join us for competitions, workshops, and community events
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="flex gap-4 justify-center"
+          >
+            <Button
+              size="lg"
+              variant="secondary"
+              className="rounded-full text-base"
+              asChild
+            >
+              <Link to="/join">Register for Events</Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
 
-      <section className="py-20 bg-background">
+      {/* Announcements Section */}
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-primary" />
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
+              <Megaphone className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Latest Updates</span>
             </div>
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold">Upcoming Events</h2>
-              <p className="text-muted-foreground">Mark your calendars</p>
-            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Announcements</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Stay informed about important updates and news
+            </p>
           </div>
 
           {loading ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {[1, 2, 3].map((n) => (
-                <Card key={n} className="p-6">
-                  <Skeleton className="h-48 w-full mb-4" />
-                  <Skeleton className="h-6 w-3/4 mb-2" />
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, i) => (
+                <Card key={i} className="p-6">
+                  <Skeleton className="h-6 w-3/4 mb-4" />
                   <Skeleton className="h-4 w-full mb-2" />
                   <Skeleton className="h-4 w-5/6" />
                 </Card>
               ))}
             </div>
-          ) : upcomingEvents.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed"
-            >
-              <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-              <p className="text-muted-foreground text-lg">No events yet — check back soon!</p>
-            </motion.div>
           ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {upcomingEvents.map((event, idx) => {
-                const isUpcoming = new Date(event.date) > new Date();
-                return (
-                  <motion.div
-                    key={event.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    whileHover={{ y: -8 }}
-                    className="relative"
-                  >
-                    {isUpcoming && (
-                      <div className="absolute -top-3 -right-3 z-10">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-primary to-accent text-white shadow-lg animate-glow-pulse">
-                          🔥 Upcoming
-                        </span>
-                      </div>
-                    )}
-                    <EventCard {...event} />
-                  </motion.div>
-                );
-              })}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {announcements.map((announcement, index) => (
+                <motion.div
+                  key={announcement.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                >
+                  <AnnouncementCard announcement={announcement} />
+                </motion.div>
+              ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* announcements section */}
-      <section className="py-20 bg-muted/30">
+      {/* Upcoming Events Section */}
+      <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-              <Megaphone className="w-6 h-6 text-primary" />
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
+              <Calendar className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Coming Soon</span>
             </div>
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold">Announcements</h2>
-              <p className="text-muted-foreground">Important updates</p>
-            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Upcoming Events</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Don't miss these exciting opportunities to train and compete
+            </p>
           </div>
-          
-          <div className="max-w-4xl mx-auto space-y-4">
-            {announcements.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12 bg-muted/20 rounded-lg"
-              >
-                <Megaphone className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-                <p className="text-muted-foreground">No announcements at this time.</p>
-              </motion.div>
-            ) : (
-              announcements.map((a, idx) => (
+
+          {loading ? (
+            <div className="grid gap-8 md:grid-cols-2">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="p-6">
+                  <Skeleton className="h-8 w-3/4 mb-4" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-5/6 mb-4" />
+                  <Skeleton className="h-10 w-32" />
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-8 md:grid-cols-2">
+              {upcomingEvents.map((event, index) => (
                 <motion.div
-                  key={a.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.1 }}
+                  key={event.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
                 >
-                  <AnnouncementCard {...a} />
+                  <EventCard event={event} />
                 </motion.div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <PastEventGallery />
+      {/* Past Events Gallery */}
+      <PastEventGallery />
+
+      {/* CTA Section */}
+      <section className="py-16 bg-background">
+        <div className="container mx-auto px-4 text-center">
+          <div className="max-w-3xl mx-auto">
+            <Trophy className="w-16 h-16 mx-auto mb-6 text-primary" />
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Ready to Participate?
+            </h2>
+            <p className="text-muted-foreground mb-8 text-lg">
+              Join us at our next event and be part of our growing Taekwondo community
+            </p>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Button size="lg" asChild className="rounded-full">
+                <Link to="/join">Register Now</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild className="rounded-full">
+                <Link to="/classes/kids">View Classes</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
     </Layout>

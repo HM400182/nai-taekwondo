@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { Layout } from "@/components/Layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +7,8 @@ import { Camera, Play } from "lucide-react";
 import PhotoLightbox from "@/components/PhotoLightbox";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+// Using mock data instead of Firebase
+import { mockGalleryImages } from "@/lib/mockData";
 
 interface MediaItem {
   id: string;
@@ -26,23 +26,22 @@ export default function Gallery() {
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   useEffect(() => {
-    const q = query(collection(db, "gallery"), orderBy("caption", "asc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          type: (data.url.includes("video") || data.url.includes(".mp4") || data.url.includes(".webm")) ? "video" as const : "image" as const,
-          title: data.caption,
-          url: data.url,
-          category: data.category || "general",
-        };
-      });
+    // Simulate async loading with mock data
+    setLoading(true);
+    
+    setTimeout(() => {
+      // Convert mock gallery images to MediaItem format
+      const items: MediaItem[] = mockGalleryImages.map((img) => ({
+        id: img.id,
+        type: "image" as const,
+        title: img.caption,
+        url: img.url,
+        category: img.category,
+      }));
+      
       setMedia(items);
       setLoading(false);
-    });
-
-    return () => unsubscribe();
+    }, 500);
   }, []);
 
   const categories = ["all", ...Array.from(new Set(media.map(m => m.category)))];
@@ -70,7 +69,7 @@ export default function Gallery() {
           <Camera className="w-4 h-4 mr-2" /> Media Gallery
         </Badge>
         <h1 className="text-4xl font-bold mb-4">Academy Media Gallery</h1>
-        <p className="text-muted-foreground mb-6">Browse our photos and videos from training, events, and tournaments.</p>
+        <p className="text-muted-foreground mb-6">Browse our photos from training, events, and tournaments.</p>
         
         {/* Category Filter */}
         <div className="flex justify-center gap-2 flex-wrap mt-6">
@@ -104,8 +103,13 @@ export default function Gallery() {
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-20 bg-muted/20 rounded-2xl border-2 border-dashed"
           >
-            <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-            <p className="text-muted-foreground text-lg">No media found. Check back soon!</p>
+            <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-xl font-bold mb-2">No media found</h3>
+            <p className="text-muted-foreground">
+              {selectedCategory === "all" 
+                ? "No media items available yet."
+                : `No items in the "${selectedCategory}" category.`}
+            </p>
           </motion.div>
         ) : (
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -114,71 +118,68 @@ export default function Gallery() {
                 key={item.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                className="group relative rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-pointer"
                 onClick={() => openLightbox(index)}
               >
-                <div className="aspect-square relative overflow-hidden bg-muted">
+                <div className="aspect-square overflow-hidden">
                   {item.type === "image" ? (
-                    <motion.img
+                    <img
                       src={item.url}
                       alt={item.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                      whileHover={{ scale: 1.15 }}
-                      transition={{ duration: 0.4 }}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                   ) : (
-                    <>
+                    <div className="relative w-full h-full bg-muted flex items-center justify-center">
+                      <Play className="w-12 h-12 text-primary" />
                       <video
                         src={item.url}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover absolute inset-0"
+                        muted
                       />
-                      <motion.div
-                        className="absolute inset-0 flex items-center justify-center bg-black/40"
-                        whileHover={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-                      >
-                        <motion.div
-                          className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center"
-                          whileHover={{ scale: 1.2, rotate: 360 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <Play className="w-8 h-8 text-primary ml-1" fill="currentColor" />
-                        </motion.div>
-                      </motion.div>
-                    </>
+                    </div>
                   )}
                 </div>
-                <motion.div
-                  initial={{ y: "100%" }}
-                  whileHover={{ y: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4"
-                >
-                  <h3 className="font-semibold text-white truncate">{item.title}</h3>
-                  <p className="text-sm text-white/80 capitalize">{item.category}</p>
-                </motion.div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                    <p className="font-medium truncate">{item.title}</p>
+                    <Badge variant="secondary" className="mt-2 capitalize">
+                      {item.category}
+                    </Badge>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="text-center py-10">
-        <Button asChild size="lg">
-          <Link to="/join">Join Our Story</Link>
-        </Button>
-      </div>
-
       {/* Lightbox */}
       <PhotoLightbox
+        images={filteredMedia}
+        currentIndex={currentMediaIndex}
         isOpen={lightboxOpen}
         onClose={() => setLightboxOpen(false)}
-        media={filteredMedia}
-        currentIndex={currentMediaIndex}
         onNavigate={navigateLightbox}
       />
+
+      {/* CTA Section */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold mb-4">Join Our Next Event</h2>
+          <p className="text-muted-foreground mb-6">
+            Be part of the action and create memories that last a lifetime
+          </p>
+          <div className="flex gap-4 justify-center">
+            <Button asChild size="lg">
+              <Link to="/events">View Events</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/join">Join Now</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
     </Layout>
   );
 }
